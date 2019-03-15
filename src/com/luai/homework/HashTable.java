@@ -1,6 +1,5 @@
 package com.luai.homework;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 
 public class HashTable<E> {
@@ -43,21 +42,6 @@ public class HashTable<E> {
         this.loadFactor = loadFactor;
     }
 
-    public void put(int key, E value) {
-        if ((double) this.size / this.table.length >= this.loadFactor)
-            resize();
-
-        LinkedList<Node<E>> nodeList = this.table[key % this.table.length];
-
-        if (nodeList == null)
-            nodeList = new LinkedList<Node<E>>();
-
-        nodeList.add(new Node<E>(key, value));
-
-        this.table[key % this.table.length] = nodeList;
-        this.size++;
-    }
-
     public E get(int key) {
         LinkedList<Node<E>> nodeList = this.table[key % this.table.length];
 
@@ -81,8 +65,25 @@ public class HashTable<E> {
             this.size--;
     }
 
+    public void put(int key, E value) {
+        if ((double) this.size / this.table.length >= this.loadFactor)
+            resize();
+
+        put(key, value, this.table);
+        this.size++;
+    }
+
     public int size() {
         return this.size;
+    }
+
+    private void put(int key, E value, LinkedList<Node<E>>[] table) {
+        LinkedList<Node<E>> nodeList = table[key % table.length];
+
+        if (nodeList == null)
+            table[key % table.length] = nodeList = new LinkedList<Node<E>>();
+
+        nodeList.add(new Node<E>(key, value));
     }
 
     private void resize() {
@@ -92,16 +93,8 @@ public class HashTable<E> {
             if (nodeList == null)
                 continue;
 
-            for (Node<E> node : nodeList) {
-                LinkedList<Node<E>> newNodeList = newTable[node.key % newTable.length];
-
-                if (newNodeList == null)
-                    newNodeList = new LinkedList<Node<E>>();
-
-                newNodeList.add(new Node<E>(node.key, node.value));
-
-                newTable[node.key % newTable.length] = newNodeList;
-            }
+            for (Node<E> node : nodeList)
+                put(node.key, node.value, newTable);
         }
 
         this.table = newTable;
